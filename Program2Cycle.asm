@@ -30,4 +30,11 @@ PUSH:
 	org 0xfffe                     ; This is the location in memory that the chip goes to when you start or hit or the rest.
 	dw RESET
 
-; Cycle of light states
+; Cycle of light states/bytes stored in registers
+; CYCLE             R8Byte                 R7Byte (output)
+;  0 (start)        00000001               01001001 (both on)
+;  1                01000001               00001000 (both off)
+;  2                00000001               00001001 (red on)  
+;  3                01000001               01001000 (green on)
+;  4                00000001               01001001 (both on)
+; Repeats... at each stage, R8 is updated, and the previous value in R7 in XORd with value in R8 to update the value in R7.          
