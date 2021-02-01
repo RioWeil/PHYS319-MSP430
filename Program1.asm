@@ -10,12 +10,6 @@ repeat:
 	mov.b r8, &P1OUT                      ; Move a byte (0000001 or 01000000) into P1OUT (switches P1.0 off P1.6 on or vise versa) 
 	xor.b #0x41, r8                       ; Xors 01000001 with 00000001 -> produces 01000000
 	mov.w #60000, r9                      ; Moves a word (16-bit) into r9 (register). Larger value = More time before LEDs switch
-	mov.w #60000, r10                     ; Moves a word (16-bit) into r10 (register). Larger value = More time before LEDs switch
-
-waiter2:
-	dec r10                               ; Decrements r10 by one.
-	jnz waiter2                           ; Jump to waiter lavel if zero bit is reset (and repeat decreasing process until zero)
-
 
 waiter:
 	dec r9                                ; Decrements r9 by one.
