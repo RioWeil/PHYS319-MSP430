@@ -12,7 +12,7 @@ P1.4: Connected to button that grounds the pin when pressed
 P1.5: Connected to button that grounds the pin when pressed
 P1.6: Connected to RS pin on LCD Display
 P1.7: Connected to Enable pin on LCD Display
-P2.0 - P2.5, P2.6 (XOUT), P2.7 (PIN): Connected to DB0-DB7 pins on LCD Display
+P2.0 - P2.5, P2.6 (XIN), P2.7 (XOUT): Connected to DB0-DB7 pins on LCD Display
 */
 
 #include  <msp430.h>
@@ -22,7 +22,6 @@ P2.0 - P2.5, P2.6 (XOUT), P2.7 (PIN): Connected to DB0-DB7 pins on LCD Display
 #define RS_LOW P1OUT = P1OUT & (~BIT6)    // Set RS pin low (for writing commands to display)
 #define E_HIGH P1OUT = P1OUT | BIT7       // Set Enable high signal
 #define E_LOW P1OUT = P1OUT & (~BIT7)     // Set Enable low signal (falling edge trigger)
-// Interfacing stuff inspired by https://www.instructables.com/Interfacing-16x2-LCD-with-msp430-launchpad-in-8-bi/
 
 // Waits 1ms
 void wait_1ms() {
@@ -617,49 +616,49 @@ void updatedisplaydifference(int difference) {
 }
 
 
-
+// Takes in the tuning note as input, returns the frequency difference between the frequency and reference frequency.
 void tunenote(int note) {
 	volatile int pulsewidth;
 	volatile int difference;
 	volatile unsigned char checkplay;
-	TAR = 0;
-	while(1) {
+	TAR = 0;                      // Set timer to zero
+	while(1) {                    // Checks if P1.1 is high, and if so, breaks loop
 		checkplay = P1IN & BIT1;
 		if (checkplay == BIT1) {
 			break;
 		}
 	}
-	while(1) {
+	while(1) {                   // Checks if P1.1 is low, and if so, breaks loop
 		checkplay = P1IN & BIT1;
 		if (checkplay == 0) {
 			break;
 		}
 	}
-	pulsewidth = TAR;
-	difference = 1000000/pulsewidth - int_to_note_freq(note);
+	pulsewidth = TAR;  // Value of one period of input audio signal
+	difference = 1000000/pulsewidth; - int_to_note_freq(note); // Freq. diff.
 	updatedisplaynote(note);
-	updatedisplaydifference(difference);
+	updatedisplaydifference(difference); // Update display with freq. difference
 }
 
 // Main function for the tuning mode
 void tuner() {
-	volatile unsigned int note = 40;
+	volatile unsigned int note = 40; // Initial note is C4
 	volatile unsigned char check1;
 	volatile unsigned char check2;
 	volatile unsigned char checkplay;
 
-	updateplaynote(note);
-	updatedisplaynote(note);
+	updateplaynote(note);            // Set note being played with PWM to C4
+	updatedisplaynote(note);         // Update display with current tuning note (C4)
 
 	while(1) {
-		check1 = P1IN & BIT4;
-		check2 = P1IN & BIT5;
-		checkplay = P1IN & BIT1;
-		if (check2 == 0) {   
+		check1 = P1IN & BIT4;        // Check if increment button pressed
+		check2 = P1IN & BIT5;        // Check if decrement button pressed
+		checkplay = P1IN & BIT1;     // Check if P1IN is low/audio signal is present
+		if (check2 == 0) {                // If incremnet button....
 	    	if (note < 76) {
 	    		note++;
-	    		updateplaynote(note);
-	    		updatedisplaynote(note);
+	    		updateplaynote(note);     // Update note being played with PWM
+	    		updatedisplaynote(note);  // Update display with current tuning note
 	    	}
 		} else if (check1 == 0) {
 			if (note > 16) {
@@ -667,8 +666,8 @@ void tuner() {
 	    		updateplaynote(note);
 	    		updatedisplaynote(note);
 			}
-		} else if (checkplay == 0) {
-			tunenote(note);
+		} else if (checkplay == 0) { // If audio signal detected
+			tunenote(note);          // Update display with freuqency diff. of played note with reference
 		}
 	}
 
